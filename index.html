@@ -1,0 +1,2141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>청년미래적금 계산기 — 핀다</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #5946FF;
+    --primary-light: #EDEAFF;
+    --primary-dark: #3D2ECC;
+    --positive: #00C896;
+    --positive-light: #E6FBF5;
+    --negative: #FF4B4B;
+    --negative-light: #FFF0F0;
+    --warning: #FF9500;
+    --warning-light: #FFF8E7;
+    --bg: #F5F6FA;
+    --card: #FFFFFF;
+    --text: #1A1A2E;
+    --sub: #6B7280;
+    --border: #E5E7EB;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: -apple-system, 'Apple SD Gothic Neo', 'Pretendard', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 0;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .back-btn {
+    width: 32px; height: 32px;
+    border: none; background: none;
+    cursor: pointer; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+  }
+
+  .header-title {
+    font-size: 16px;
+    font-weight: 600;
+    flex: 1;
+  }
+
+  .logo {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.5px;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 0 -20px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  /* Screens */
+  .screen { display: none; padding: 24px 20px 120px; }
+  .screen.active { display: block; }
+
+  /* Landing */
+  .landing-hero {
+    text-align: center;
+    padding: 32px 0 24px;
+  }
+
+  .hero-emoji {
+    font-size: 72px;
+    margin-bottom: 20px;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--primary-light);
+    color: var(--primary);
+    margin-bottom: 16px;
+  }
+
+  .badge.positive { background: var(--positive-light); color: var(--positive); }
+  .badge.warning { background: var(--warning-light); color: var(--warning); }
+  .badge.negative { background: var(--negative-light); color: var(--negative); }
+
+  h1 { font-size: 28px; font-weight: 800; line-height: 1.3; letter-spacing: -0.5px; margin-bottom: 12px; }
+  h2 { font-size: 22px; font-weight: 700; line-height: 1.35; letter-spacing: -0.3px; margin-bottom: 8px; }
+  h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+
+  .sub-text { font-size: 15px; color: var(--sub); line-height: 1.6; }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .card-row:last-child { border-bottom: none; }
+  .card-row .value { font-weight: 600; }
+  .card-row .value.positive { color: var(--positive); }
+  .card-row .value.negative { color: var(--negative); }
+
+  /* Info box */
+  .info-box {
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .info-box.info { background: var(--primary-light); color: var(--primary); }
+  .info-box.warning { background: var(--warning-light); color: #A05F00; }
+  .info-box.negative { background: var(--negative-light); color: var(--negative); }
+  .info-box.positive { background: var(--positive-light); color: #007A5E; }
+
+  /* Section label */
+  .section-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .section-gap { margin-bottom: 24px; }
+
+  /* Input */
+  .input-group { margin-bottom: 20px; }
+  .input-label { font-size: 14px; font-weight: 500; color: var(--sub); margin-bottom: 8px; }
+
+  .input-row { display: flex; gap: 8px; }
+
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    height: 48px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0 14px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--card);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--primary); }
+
+  .input-hint {
+    font-size: 12px;
+    color: var(--sub);
+    margin-top: 5px;
+  }
+
+  .input-suffix {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    font-size: 14px;
+    color: var(--sub);
+    white-space: nowrap;
+    padding-left: 4px;
+  }
+
+  /* Radio cards */
+  .radio-group { display: flex; flex-direction: column; gap: 8px; }
+
+  .radio-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .radio-card:hover { border-color: var(--primary); background: var(--primary-light); }
+  .radio-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    border-left: 3px solid var(--primary);
+  }
+
+  .radio-dot {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .radio-card.selected .radio-dot {
+    border-color: var(--primary);
+    background: var(--primary);
+  }
+  .radio-card.selected .radio-dot::after {
+    content: '';
+    position: absolute;
+    width: 6px; height: 6px;
+    background: white;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .radio-card .desc { font-size: 12px; color: var(--sub); margin-top: 2px; }
+
+  /* Toggle chips */
+  .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .chip {
+    padding: 8px 16px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--card);
+    transition: all 0.15s;
+  }
+  .chip:hover { border-color: var(--primary); color: var(--primary); }
+  .chip.selected {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+
+  /* Select cards (large) */
+  .select-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .select-card:hover { border-color: var(--primary); }
+  .select-card.selected { border-color: var(--primary); background: var(--primary-light); }
+  .select-card-icon { font-size: 28px; }
+  .select-card-title { font-size: 16px; font-weight: 700; }
+  .select-card-desc { font-size: 13px; color: var(--sub); margin-top: 3px; }
+
+  /* Slider */
+  .slider-wrap { padding: 8px 0; }
+  .slider-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .slider-value { font-size: 20px; font-weight: 800; color: var(--primary); }
+
+  input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 99px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 2px 8px rgba(64,70,245,0.3);
+    cursor: pointer;
+  }
+
+  /* Hero result card */
+  .result-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, #6C63FF 100%);
+    border-radius: 16px;
+    padding: 24px;
+    color: white;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-hero::before {
+    content: '';
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    top: -80px; right: -60px;
+  }
+  .result-hero-sub { font-size: 14px; opacity: 0.8; margin-bottom: 6px; }
+  .result-hero-amount {
+    font-size: 44px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  .result-hero-unit { font-size: 18px; font-weight: 600; opacity: 0.9; }
+  .result-hero-badges { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .hero-badge {
+    padding: 4px 10px;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+  }
+
+  /* Verdict card */
+  .verdict-card {
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .verdict-card.good { background: linear-gradient(135deg, var(--positive), #00A879); }
+  .verdict-card.bad { background: linear-gradient(135deg, var(--negative), #CC3333); }
+  .verdict-card.neutral { background: linear-gradient(135deg, var(--warning), #E07800); }
+  .verdict-icon { font-size: 40px; }
+  .verdict-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .verdict-desc { font-size: 13px; opacity: 0.9; }
+
+  /* Bank list */
+  .bank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .bank-row:last-child { border-bottom: none; }
+  .bank-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .bank-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .bank-rate { font-size: 13px; color: var(--sub); }
+  .bank-amount { font-size: 15px; font-weight: 700; color: var(--primary); }
+  .bank-chevron { color: var(--sub); font-size: 14px; }
+
+  /* Tabs */
+  .tab-group {
+    display: flex;
+    background: var(--border);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 16px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--sub);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .tab-btn.active {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+
+  /* Buttons */
+  .btn {
+    width: 100%;
+    height: 52px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(64,70,245,0.3); }
+  .btn-primary:disabled { background: var(--border); color: var(--sub); transform: none; box-shadow: none; cursor: not-allowed; }
+
+  .btn-outline {
+    background: white;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+  }
+  .btn-outline:hover { background: var(--primary-light); }
+
+  .btn-ghost {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 14px;
+    text-decoration: underline;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+  }
+
+  /* Sticky bottom */
+  .sticky-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 16px 20px 24px;
+    z-index: 50;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.08);
+  }
+
+  .sticky-bottom-sub {
+    font-size: 13px;
+    color: var(--sub);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  /* Bottom sheet */
+  .sheet-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .sheet-overlay.open { display: flex; }
+
+  .sheet {
+    background: var(--card);
+    border-radius: 24px 24px 0 0;
+    padding: 20px 20px 40px;
+    width: 100%;
+    max-width: 430px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    margin: 0 auto 20px;
+  }
+
+  /* Timeline */
+  .timeline { position: relative; }
+  .timeline-item { display: flex; gap: 16px; margin-bottom: 24px; }
+  .timeline-left { display: flex; flex-direction: column; align-items: center; }
+  .timeline-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .timeline-line {
+    width: 2px;
+    flex: 1;
+    background: var(--border);
+    margin-top: 4px;
+    min-height: 24px;
+  }
+  .timeline-content { padding-top: 4px; flex: 1; }
+  .timeline-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .timeline-desc { font-size: 13px; color: var(--sub); line-height: 1.5; }
+
+  /* Count-up animation */
+  .count-up { transition: all 0.6s ease; }
+
+  /* Expand section */
+  .expand-section { overflow: hidden; transition: max-height 0.3s ease; }
+  .expand-section.hidden { max-height: 0; }
+  .expand-section.visible { max-height: 300px; }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* Comparison bar */
+  .compare-bar-wrap { margin: 8px 0; }
+  .compare-bar-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--sub); margin-bottom: 6px; }
+  .compare-bar-track { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .compare-bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+
+  /* Highlight number */
+  .big-number {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--primary);
+    letter-spacing: -1px;
+  }
+
+  .text-center { text-align: center; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .mb-16 { margin-bottom: 16px; }
+  .gap-8 { gap: 8px; }
+
+  /* Scroll padding for fixed bottom */
+  .pb-safe { padding-bottom: 120px; }
+
+  /* 알림 배너 */
+  .notify-banner {
+    background: linear-gradient(135deg, #1A1340 0%, #2D1E6B 100%);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    gap: 12px;
+  }
+  .notify-banner:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(89,70,255,0.25); }
+  .notify-banner-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+  .notify-bell { font-size: 28px; animation: ring 2.5s ease-in-out infinite; flex-shrink: 0; }
+  @keyframes ring {
+    0%, 100% { transform: rotate(0deg); }
+    10% { transform: rotate(15deg); }
+    20% { transform: rotate(-12deg); }
+    30% { transform: rotate(10deg); }
+    40% { transform: rotate(-8deg); }
+    50% { transform: rotate(0deg); }
+  }
+  .notify-title { font-size: 14px; font-weight: 700; color: white; margin-bottom: 3px; }
+  .notify-desc { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.4; }
+  .notify-cta {
+    background: var(--primary);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 9px 14px;
+    border-radius: 99px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(89,70,255,0.5);
+  }
+
+  /* 앱 피처 리스트 */
+  .app-feature-list { display: flex; flex-direction: column; gap: 0; margin-bottom: 20px; }
+  .app-feature-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .app-feature-row:last-child { border-bottom: none; }
+  .app-feature-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .app-feature-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .app-feature-desc { font-size: 12px; color: var(--sub); }
+
+  /* 앱 설치 시트 */
+  .app-install-sheet { text-align: center; }
+  .app-icon-wrap {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, var(--primary), #9B8FFF);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 24px rgba(89,70,255,0.3);
+  }
+  .store-btn {
+    width: 100%;
+    height: 52px;
+    border-radius: 12px;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    transition: all 0.15s;
+  }
+  .store-btn.ios { background: #000; color: white; }
+  .store-btn.aos { background: #01875F; color: white; }
+  .store-btn.unified { background: var(--primary); color: white; }
+  .store-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .notify-done-state {
+    display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 0;
+  }
+  .notify-done-icon { font-size: 56px; }
+  .notify-done-title { font-size: 18px; font-weight: 800; }
+  .notify-done-desc { font-size: 14px; color: var(--sub); line-height: 1.6; text-align: center; }
+
+  /* MyData inline badge */
+  .mydata-inline-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 99px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(89,70,255,0.3);
+  }
+
+  .mydata-row {
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .mydata-row:hover { background: var(--primary-light); border-radius: 8px; }
+
+  /* MyData card */
+  .mydata-card {
+    background: linear-gradient(135deg, #f0f1ff 0%, #e8f4ff 100%);
+    border: 2px solid var(--primary);
+    border-radius: 14px;
+    padding: 18px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+  .mydata-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(64,70,245,0.15); }
+  .mydata-card-left { display: flex; align-items: center; gap: 12px; }
+  .mydata-icon { font-size: 28px; }
+  .mydata-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 3px; }
+  .mydata-desc { font-size: 13px; color: var(--sub); }
+  .mydata-badge-wrap { display: flex; align-items: center; gap: 6px; }
+  .mydata-badge {
+    background: var(--primary);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 99px;
+  }
+
+  /* 연동 은행 아이콘 */
+  .bank-icons-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px;
+    margin-bottom: 16px;
+    font-size: 20px;
+  }
+
+  /* 마이데이터 로딩 */
+  .mydata-loading-icon {
+    font-size: 64px;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+  }
+  .loading-steps { display: flex; flex-direction: column; gap: 10px; width: 100%; padding: 0 40px; }
+  .loading-step {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sub);
+    transition: all 0.4s;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: var(--card);
+  }
+  .loading-step.done { color: var(--positive); background: var(--positive-light); }
+  .loading-step.active { color: var(--primary); background: var(--primary-light); opacity: 1 !important; }
+
+  /* 마이데이터 완료 후 미리보기 카드 */
+  .mydata-result-preview {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--positive);
+  }
+  .mydata-result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mydata-result-row:last-child { border-bottom: none; }
+  .mydata-result-label { color: var(--sub); }
+  .mydata-result-value { font-weight: 700; color: var(--text); }
+
+  /* Step indicator */
+  .step-indicator {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .step-dot.active { background: var(--primary); width: 24px; border-radius: 4px; }
+
+  /* Inline age display */
+  .age-display {
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 600;
+    margin-top: 6px;
+    min-height: 18px;
+  }
+
+  /* Result compare table */
+  .compare-table { width: 100%; border-collapse: collapse; }
+  .compare-table th {
+    background: var(--bg);
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--sub);
+    font-weight: 600;
+    text-align: center;
+  }
+  .compare-table td {
+    padding: 12px;
+    font-size: 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table .highlight { font-weight: 700; color: var(--primary); }
+
+  /* Error screen */
+  .error-screen { text-align: center; padding: 60px 20px; }
+  .error-emoji { font-size: 64px; margin-bottom: 20px; }
+
+  /* Floating label */
+  .float-label {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    background: var(--positive);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 99px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- Header -->
+  <div class="header" id="header">
+    <div class="header-top">
+      <button class="back-btn" id="backBtn" onclick="goBack()" style="display:none">←</button>
+      <div class="logo" id="headerLogo">finda</div>
+      <div class="header-title" id="headerTitle" style="display:none"></div>
+    </div>
+    <div class="progress-bar" id="progressBar" style="display:none">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 0: Landing -->
+  <div class="screen active" id="screen-0">
+    <div class="landing-hero">
+      <span class="hero-emoji">💰</span>
+      <div class="badge">📅 6월 22일 출시</div>
+      <h1>청년미래적금<br>내가 받을 수 있을까?</h1>
+      <p class="sub-text mt-8">자격·수령액·갈아타기 여부까지<br>마이데이터로 1분 만에 확인해요</p>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-row">
+        <span>⏱ 소요시간</span>
+        <span class="value">약 1분</span>
+      </div>
+      <div class="card-row mydata-row" onclick="simulateMydata()">
+        <span>📋 필요한 정보</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span style="color:var(--border-dark,#C4C9D4);font-size:12px;text-decoration:line-through;font-weight:400">생년월일·소득·직장</span>
+          <span class="mydata-inline-badge">🔗 마이데이터로 한번에</span>
+        </div>
+      </div>
+      <div class="card-row">
+        <span>🎁 알 수 있는 것</span>
+        <span class="value">자격·수령액·갈아타기</span>
+      </div>
+    </div>
+
+    <div class="sticky-bottom">
+      <button class="btn btn-primary" onclick="simulateMydata()">지금 바로 확인하기 →</button>
+      <div style="text-align:center; margin-top:10px">
+        <button class="btn-ghost" onclick="goTo(1)">직접 입력할게요</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 0-M: 마이데이터 로딩 -->
+  <div class="screen" id="screen-mydata">
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:24px">
+      <div class="mydata-loading-icon">🔗</div>
+      <div style="text-align:center">
+        <div style="font-size:18px; font-weight:700; margin-bottom:8px" id="mydataLoadingText">마이데이터 불러오는 중...</div>
+        <div style="font-size:14px; color:var(--sub)">잠깐이면 돼요</div>
+      </div>
+      <div class="loading-steps" id="loadingSteps">
+        <div class="loading-step" id="lstep1">⏳ 소득 정보 확인 중</div>
+        <div class="loading-step" id="lstep2" style="opacity:0.3">⏳ 재직 정보 확인 중</div>
+        <div class="loading-step" id="lstep3" style="opacity:0.3">⏳ 도약계좌 확인 중</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: Step 1 — 자격 확인 -->
+  <div class="screen" id="screen-1">
+    <div class="section-label">STEP 1</div>
+    <h2>기본 정보를<br>알려주세요</h2>
+    <p class="sub-text mt-8 mb-16">자격 여부와 유형을 확인할게요</p>
+
+    <!-- Q1 생년월일 -->
+    <div class="input-group">
+      <div class="input-label">생년월일</div>
+      <div class="input-row">
+        <input type="number" id="birthYear" placeholder="1995" min="1985" max="2007" style="flex:2" oninput="calcAge()">
+        <input type="number" id="birthMonth" placeholder="01" min="1" max="12" style="flex:1" oninput="calcAge()">
+        <input type="number" id="birthDay" placeholder="01" min="1" max="31" style="flex:1" oninput="calcAge()">
+      </div>
+      <div class="age-display" id="ageDisplay"></div>
+    </div>
+
+    <!-- Q2 군복무 -->
+    <div class="input-group">
+      <div class="input-label">군 복무 여부</div>
+      <div class="chip-group">
+        <div class="chip" id="chip-army-y" onclick="selectArmy(true)">복무 완료</div>
+        <div class="chip" id="chip-army-n" onclick="selectArmy(false)">해당 없음</div>
+      </div>
+      <div class="expand-section hidden" id="armySection">
+        <div style="margin-top:12px">
+          <div class="input-label">복무 기간</div>
+          <div class="input-row">
+            <input type="number" id="armyMonths" placeholder="21" min="1" max="36" style="flex:1" oninput="calcAge()">
+            <div class="input-suffix">개월</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3 소득 -->
+    <div class="input-group">
+      <div class="input-label">연 소득 (총급여 기준)</div>
+      <div class="radio-group" id="incomeGroup">
+        <div class="radio-card" onclick="selectIncome(0)">
+          <div class="radio-dot"></div>
+          <div>
+            <div>2,400만원 이하</div>
+            <div class="desc">우대형 12% 기여금 가능</div>
+          </div>
+        </div>
+        <div class="radio-card" onclick="selectIncome(1)">
+          <div class="radio-dot"></div>
+          <div>
+            <div>2,400만원 ~ 3,600만원</div>
+            <div class="desc">우대형 12% 기여금 가능</div>
+          </div>
+        </div>
+        <div class="radio-card" onclick="selectIncome(2)">
+          <div class="radio-dot"></div>
+          <div>
+            <div>3,600만원 ~ 7,500만원</div>
+            <div class="desc">일반형 6% 기여금 적용</div>
+          </div>
+        </div>
+        <div class="radio-card" onclick="selectIncome(3)">
+          <div class="radio-dot"></div>
+          <div>
+            <div>7,500만원 초과</div>
+            <div class="desc">가입 자격 없음</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4 재직 형태 -->
+    <div class="input-group">
+      <div class="input-label">재직 형태</div>
+      <div class="chip-group">
+        <div class="chip" id="chip-job-0" onclick="selectJob(0)">중소기업 재직</div>
+        <div class="chip" id="chip-job-1" onclick="selectJob(1)">소상공인</div>
+        <div class="chip" id="chip-job-2" onclick="selectJob(2)">일반/기타</div>
+      </div>
+
+      <div class="expand-section hidden" id="smeSect">
+        <div style="margin-top:12px">
+          <div class="input-label">취업 시점</div>
+          <div class="radio-group">
+            <div class="radio-card" onclick="selectNewJob(true)">
+              <div class="radio-dot" id="newjob-y"></div>
+              <div>
+                <div>2025년 이후 신규 취업</div>
+                <div class="desc">소득과 무관하게 우대형 가능</div>
+              </div>
+            </div>
+            <div class="radio-card" onclick="selectNewJob(false)">
+              <div class="radio-dot" id="newjob-n"></div>
+              <div>
+                <div>2024년 이전 취업</div>
+                <div class="desc">소득 3,600만원 이하 시 우대형</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:120px"></div>
+    <div class="sticky-bottom">
+      <button class="btn btn-primary" id="step1Next" onclick="checkEligibility()" disabled>다음으로 →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: 비해당 -->
+  <div class="screen" id="screen-err">
+    <div class="error-screen">
+      <div class="error-emoji">😔</div>
+      <h2>아쉽게도 지금은<br>해당하지 않아요</h2>
+      <p class="sub-text mt-8" id="errReason"></p>
+
+      <div class="card mt-16" style="text-align:left">
+        <div class="card-row">
+          <span>나이</span>
+          <span class="value" id="errAge"></span>
+        </div>
+        <div class="card-row">
+          <span>소득 조건</span>
+          <span class="value" id="errIncome"></span>
+        </div>
+      </div>
+
+      <div class="info-box info mt-16" style="text-align:left">
+        <span>💡</span>
+        <span>군 복무 기간 입력 시 나이 상한이 최대 5년 연장돼요</span>
+      </div>
+    </div>
+
+    <div class="sticky-bottom">
+      <button class="btn btn-outline" onclick="goTo(1)">정보 다시 입력하기</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Step 2A — 유형 결과 -->
+  <div class="screen" id="screen-2">
+    <div class="section-label">STEP 2</div>
+    <h2>내 유형이<br>확인됐어요</h2>
+
+    <div id="typeCard" class="result-hero" style="margin-top:16px">
+      <div class="result-hero-sub">적용되는 정부기여금</div>
+      <div style="display:flex; align-items:baseline; gap:8px">
+        <div class="result-hero-amount" id="typeRate">12%</div>
+        <div class="result-hero-unit">기여금</div>
+      </div>
+      <div style="font-size:14px; opacity:0.85; margin-top:6px" id="typeDesc">납입액의 12% 정부가 매칭 지원</div>
+      <div class="result-hero-badges">
+        <div class="hero-badge" id="typeBadge1">우대형</div>
+        <div class="hero-badge" id="typeBadge2">월 50만원 × 36개월</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-row">
+        <span>✅ 나이</span>
+        <span class="value" id="confirmAge" style="color:var(--positive)"></span>
+      </div>
+      <div class="card-row">
+        <span>✅ 소득 조건</span>
+        <span class="value" id="confirmIncome" style="color:var(--positive)"></span>
+      </div>
+      <div class="card-row">
+        <span>✅ 재직 형태</span>
+        <span class="value" id="confirmJob" style="color:var(--positive)"></span>
+      </div>
+    </div>
+
+    <div id="generalWarning" class="info-box warning" style="display:none">
+      <span>⚠️</span>
+      <span>소득이 3,600만원을 넘어 <b>일반형(6%)</b>이 적용돼요. 우대형보다 기여금이 절반이에요.</span>
+    </div>
+
+    <div style="height:80px"></div>
+    <div class="sticky-bottom">
+      <button class="btn btn-primary" onclick="goTo(3)">다음으로 →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: Step 2B — 도약계좌 여부 -->
+  <div class="screen" id="screen-3">
+    <div class="section-label">STEP 3</div>
+    <h2>혹시 지금<br>청년도약계좌 있으신가요?</h2>
+    <p class="sub-text mt-8 mb-16">있다면 갈아타기 손익까지 비교해드려요</p>
+
+    <div class="select-card" id="select-has-acc" onclick="selectHasAccount(true)">
+      <div class="select-card-icon">💳</div>
+      <div>
+        <div class="select-card-title">네, 가입되어 있어요</div>
+        <div class="select-card-desc">갈아타기가 유리한지 계산해드려요</div>
+      </div>
+    </div>
+
+    <div class="select-card" id="select-no-acc" onclick="selectHasAccount(false)">
+      <div class="select-card-icon">🙅</div>
+      <div>
+        <div class="select-card-title">아니요, 없어요</div>
+        <div class="select-card-desc">수령액과 은행별 비교만 볼게요</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: 도약계좌 정보 입력 -->
+  <div class="screen" id="screen-4">
+    <div class="section-label">STEP 3-1</div>
+    <h2>도약계좌 정보를<br>알려주세요</h2>
+    <p class="sub-text mt-8 mb-16">갈아타기 손익을 정확히 계산할게요</p>
+
+    <div class="input-group">
+      <div class="input-label">납입한 기간</div>
+      <div class="input-row">
+        <input type="number" id="doyakMonths" placeholder="24" min="1" max="59" style="flex:1" oninput="updateStep5Btn()">
+        <div class="input-suffix">개월 (최대 59개월)</div>
+      </div>
+      <div class="input-hint">1개월~59개월 사이로 입력해주세요</div>
+    </div>
+
+    <div class="input-group">
+      <div class="input-label">월 평균 납입액</div>
+      <div class="input-row">
+        <input type="number" id="doyakMonthly" placeholder="70" min="1" max="70" style="flex:1" oninput="updateStep5Btn()">
+        <div class="input-suffix">만원 (최대 70만원)</div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <div class="input-label">현재 적용 금리 (모르면 기본값 사용)</div>
+      <div class="radio-group">
+        <div class="radio-card selected" id="doyakRate-0" onclick="selectDoyakRate(0)">
+          <div class="radio-dot"></div>
+          <div>6% <span style="font-size:12px;color:var(--sub)">(기본값)</span></div>
+        </div>
+        <div class="radio-card" id="doyakRate-1" onclick="selectDoyakRate(1)">
+          <div class="radio-dot"></div>
+          <div>직접 입력</div>
+        </div>
+      </div>
+      <div class="expand-section hidden" id="rateCustomSect" style="margin-top:10px">
+        <div class="input-row">
+          <input type="number" id="doyakCustomRate" placeholder="6.0" min="1" max="10" step="0.1" style="flex:1">
+          <div class="input-suffix">%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box info">
+      <span>ℹ️</span>
+      <span>갈아타기는 <b>2026년 6월</b> 최초 모집 기간에만 가능해요. 이 기간을 놓치면 동일 조건의 전환 기회가 없어요.</span>
+    </div>
+
+    <div style="height:80px"></div>
+    <div class="sticky-bottom">
+      <button class="btn btn-primary" id="step5Next" onclick="goToResult(true)" disabled>결과 보기 →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: 결과 (도약계좌 없음) -->
+  <div class="screen" id="screen-result-simple">
+    <div class="section-label">결과</div>
+    <h2 id="simpleResultTitle">내가 받을 수 있는<br>최대 금액이에요</h2>
+
+    <div class="result-hero" style="margin-top:16px">
+      <div class="result-hero-sub">3년 만기 시 총 수령액</div>
+      <div style="display:flex; align-items:baseline; gap:4px">
+        <div class="result-hero-amount count-up" id="simpleAmount">2,255</div>
+        <div class="result-hero-unit">만원</div>
+      </div>
+      <div style="font-size:13px; opacity:0.8; margin-top:4px" id="simpleAmountSub">월 50만원 × 36개월 · 우대금리 최대 적용 기준</div>
+      <div class="result-hero-badges" id="simpleHeroBadges">
+        <div class="hero-badge" id="simpleTypeBadge">우대형 12%</div>
+        <div class="hero-badge">비과세</div>
+        <div class="hero-badge" id="simpleRateBadge">금리 최대 8%</div>
+      </div>
+    </div>
+
+    <!-- 납입액 슬라이더 -->
+    <div class="card">
+      <div class="slider-wrap">
+        <div class="slider-label-row">
+          <span style="font-size:14px; color:var(--sub)">월 납입액 조정</span>
+          <span class="slider-value" id="sliderVal">50만원</span>
+        </div>
+        <input type="range" id="monthlySlider" min="1" max="50" value="50" oninput="updateSlider()">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:6px">
+          <span>1만원</span><span>50만원</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 수령액 구성 -->
+    <div class="card">
+      <div style="font-size:14px; font-weight:600; margin-bottom:12px">수령액 구성</div>
+      <div class="card-row">
+        <span>납입 원금</span>
+        <span class="value" id="breakdown-principal">1,800만원</span>
+      </div>
+      <div class="card-row">
+        <span>기본 이자</span>
+        <span class="value positive" id="breakdown-interest">+141만원</span>
+      </div>
+      <div class="card-row">
+        <span>정부 기여금</span>
+        <span class="value positive" id="breakdown-contrib">+216만원</span>
+      </div>
+      <div class="divider"></div>
+      <div class="card-row">
+        <span style="font-weight:700">합계</span>
+        <span class="value" id="breakdown-total" style="font-size:18px; color:var(--primary)">2,157만원</span>
+      </div>
+      <div class="info-box positive" style="margin-top:8px; margin-bottom:0">
+        <span>✨</span>
+        <span id="urateBonus">우대금리 모두 충족 시 <b>+98만원</b> 추가</span>
+      </div>
+    </div>
+
+    <!-- 앱 설치 유도 알림 배너 -->
+    <div class="notify-banner" onclick="showAppInstallSheet()">
+      <div class="notify-banner-left">
+        <div class="notify-bell">🔔</div>
+        <div>
+          <div class="notify-title">출시일 알림 받기 — 6월 22일</div>
+          <div class="notify-desc">핀다 앱 설치하고 D-day 놓치지 마요</div>
+        </div>
+      </div>
+      <div class="notify-cta">알림 받기</div>
+    </div>
+
+    <!-- 은행별 비교 -->
+    <div style="font-size:16px; font-weight:700; margin:16px 0 8px">은행별 비교</div>
+    <div class="card" id="bankList"></div>
+
+    <div style="height:80px"></div>
+    <div class="sticky-bottom">
+      <div class="sticky-bottom-sub" id="recommendBankSub">국민은행에서 가장 많이 받을 수 있어요</div>
+      <button class="btn btn-primary" onclick="openSheet('applySheet')">국민은행 바로 신청하기 →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 7: 갈아타기 비교 결과 -->
+  <div class="screen" id="screen-result-switch">
+    <div class="section-label">갈아타기 비교</div>
+    <h2>두 시나리오를<br>비교해드릴게요</h2>
+
+    <div id="verdictCard" class="verdict-card good" style="margin-top:16px">
+      <div class="verdict-icon" id="verdictIcon">🎉</div>
+      <div>
+        <div class="verdict-title" id="verdictTitle">갈아타기가 유리해요</div>
+        <div class="verdict-desc" id="verdictDesc">청년미래적금으로 전환하면 더 많이 받아요</div>
+      </div>
+    </div>
+
+    <!-- 비교 바 -->
+    <div class="card">
+      <div style="font-size:14px;font-weight:600;margin-bottom:16px">총 수령액 비교</div>
+      <div class="compare-bar-wrap">
+        <div class="compare-bar-label">
+          <span>갈아타기</span>
+          <span id="switchTotalLabel" style="font-weight:700;color:var(--primary)">3,800만원</span>
+        </div>
+        <div class="compare-bar-track">
+          <div class="compare-bar-fill" id="switchBar" style="background:var(--primary); width:90%"></div>
+        </div>
+      </div>
+      <div class="compare-bar-wrap" style="margin-top:12px">
+        <div class="compare-bar-label">
+          <span>유지</span>
+          <span id="keepTotalLabel" style="font-weight:700;color:var(--sub)">3,500만원</span>
+        </div>
+        <div class="compare-bar-track">
+          <div class="compare-bar-fill" id="keepBar" style="background:var(--sub); width:80%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 탭 비교 -->
+    <div class="tab-group">
+      <button class="tab-btn active" id="tab-switch" onclick="switchTab('switch')">갈아타기</button>
+      <button class="tab-btn" id="tab-keep" onclick="switchTab('keep')">유지</button>
+    </div>
+
+    <div id="tab-content-switch">
+      <div class="card">
+        <div style="font-size:13px;color:var(--sub);font-weight:600;margin-bottom:10px">도약계좌 특별해지 수령</div>
+        <div class="card-row">
+          <span>납입 원금</span>
+          <span class="value" id="sw-principal">OOO만원</span>
+        </div>
+        <div class="card-row">
+          <span>기여금 보전</span>
+          <span class="value positive" id="sw-contrib">+OOO만원</span>
+        </div>
+        <div class="card-row">
+          <span>이자</span>
+          <span class="value positive" id="sw-interest">+OOO만원</span>
+        </div>
+        <div class="card-row" style="font-weight:700">
+          <span>소계</span>
+          <span class="value" id="sw-subtotal1">OOO만원</span>
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:13px;color:var(--sub);font-weight:600;margin-bottom:10px">청년미래적금 3년 후</div>
+        <div class="card-row">
+          <span>납입 원금</span>
+          <span class="value" id="sw-new-principal">1,800만원</span>
+        </div>
+        <div class="card-row">
+          <span>정부기여금</span>
+          <span class="value positive" id="sw-new-contrib">+216만원</span>
+        </div>
+        <div class="card-row">
+          <span>이자</span>
+          <span class="value positive" id="sw-new-interest">+141만원</span>
+        </div>
+        <div class="card-row" style="font-weight:700">
+          <span>소계</span>
+          <span class="value" id="sw-subtotal2">OOO만원</span>
+        </div>
+        <div class="divider"></div>
+        <div class="card-row">
+          <span style="font-size:15px;font-weight:800">갈아타기 총 수령액</span>
+          <span class="value" id="sw-total" style="font-size:20px;color:var(--primary)">OOOO만원</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-content-keep" style="display:none">
+      <div class="card">
+        <div style="font-size:13px;color:var(--sub);font-weight:600;margin-bottom:10px">도약계좌 만기까지 유지</div>
+        <div class="card-row">
+          <span>기존 납입 원금</span>
+          <span class="value" id="kp-old-principal">OOO만원</span>
+        </div>
+        <div class="card-row">
+          <span>잔여 납입 원금</span>
+          <span class="value" id="kp-rem-principal">OOO만원</span>
+        </div>
+        <div class="card-row">
+          <span>정부기여금 전체</span>
+          <span class="value positive" id="kp-contrib">+OOO만원</span>
+        </div>
+        <div class="card-row">
+          <span>이자 전체</span>
+          <span class="value positive" id="kp-interest">+OOO만원</span>
+        </div>
+        <div class="divider"></div>
+        <div class="card-row">
+          <span style="font-size:15px;font-weight:800">유지 시 총 수령액</span>
+          <span class="value" id="kp-total" style="font-size:20px;color:var(--sub)">OOOO만원</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box warning mt-16">
+      <span>⚠️</span>
+      <div>
+        <div>갈아타기는 <b>6월 한 번만</b> 기회가 있어요</div>
+        <div style="margin-top:4px">결혼·주택자금은 특별중도해지 사유에서 제외돼요</div>
+      </div>
+    </div>
+
+    <div class="notify-banner" onclick="showAppInstallSheet()" style="margin-top:12px">
+      <div class="notify-banner-left">
+        <div class="notify-bell">🔔</div>
+        <div>
+          <div class="notify-title">출시일 알림 받기 — 6월 22일</div>
+          <div class="notify-desc">핀다 앱 설치하고 D-day 놓치지 마요</div>
+        </div>
+      </div>
+      <div class="notify-cta">알림 받기</div>
+    </div>
+
+    <div style="text-align:center; margin:16px 0">
+      <button class="btn-ghost" onclick="openSheet('howSheet')">갈아타기 방법 보기 →</button>
+    </div>
+
+    <div style="height:80px"></div>
+    <div class="sticky-bottom" id="switchStickyBottom">
+      <button class="btn btn-primary" id="switchCTA" onclick="openSheet('applySheet')">갈아타기 신청하기 →</button>
+      <div style="text-align:center;margin-top:8px">
+        <button class="btn-ghost" id="keepCTA" onclick="alert('도약계좌를 유지하시기로 했군요! 만기까지 잘 관리하세요 😊')">그냥 유지할게요</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet: 앱 설치 유도 -->
+  <div class="sheet-overlay" id="appInstallSheet" onclick="closeSheet('appInstallSheet')">
+    <div class="sheet app-install-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+
+      <div id="appInstallContent">
+        <div class="app-icon-wrap">💰</div>
+        <h3 style="margin-bottom:8px">핀다 앱에서 더 편하게!</h3>
+        <p class="sub-text" style="margin-bottom:16px">마이데이터 연결은 앱에서만 가능해요<br>앱 설치 후 1분 만에 자격·수령액 확인해요</p>
+
+        <div class="app-feature-list">
+          <div class="app-feature-row">
+            <span class="app-feature-icon">🔗</span>
+            <div>
+              <div class="app-feature-title">마이데이터 자동 연결</div>
+              <div class="app-feature-desc">소득·직장·도약계좌 한번에 불러오기</div>
+            </div>
+          </div>
+          <div class="app-feature-row">
+            <span class="app-feature-icon">🔔</span>
+            <div>
+              <div class="app-feature-title">출시일 D-day 알림</div>
+              <div class="app-feature-desc">6월 22일 오전 9시, 잊지 않게 알려드려요</div>
+            </div>
+          </div>
+          <div class="app-feature-row">
+            <span class="app-feature-icon">⚡️</span>
+            <div>
+              <div class="app-feature-title">바로 신청</div>
+              <div class="app-feature-desc">원하는 은행 선택하고 앱에서 즉시 가입</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="store-btn unified" onclick="goToStore()">
+          <span id="storeIcon">📲</span>
+          <span id="storeBtnText">핀다 앱 설치하기</span>
+        </button>
+        <div style="text-align:center; margin-top:4px">
+          <button class="btn-ghost" onclick="closeSheet('appInstallSheet')">나중에 직접 입력할게요</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom Sheet: 갈아타기 방법 -->
+  <div class="sheet-overlay" id="howSheet" onclick="closeSheet('howSheet')">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <h3>갈아타기 방법</h3>
+      <p class="sub-text mt-8 mb-16">3단계로 간단하게 전환할 수 있어요</p>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-left">
+            <div class="timeline-dot">1</div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-title">도약계좌 은행 앱 또는 방문</div>
+            <div class="timeline-desc">"특별중도해지 — 청년미래적금 전환" 메뉴 선택<br>6월 모집기간 내에 신청 필수</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-left">
+            <div class="timeline-dot">2</div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-title">원금 + 보전 기여금 수령</div>
+            <div class="timeline-desc">영업일 3~5일 내 지급<br>비과세 및 기여금 혜택 보전됩니다</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-left">
+            <div class="timeline-dot">3</div>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-title">청년미래적금 신규 가입</div>
+            <div class="timeline-desc">6월 22일 이후 원하는 은행에서 가입<br>위 계산기 추천 은행을 참고하세요</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box negative">
+        <span>❗</span>
+        <span>6월 모집기간을 놓치면 동일 조건 전환이 불가해요</span>
+      </div>
+
+      <button class="btn btn-primary mt-16" onclick="closeSheet('howSheet'); openSheet('applySheet')">신청 가능 은행 보기 →</button>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet: 신청 -->
+  <div class="sheet-overlay" id="applySheet" onclick="closeSheet('applySheet')">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <h3>어느 은행에서 신청할까요?</h3>
+      <p class="sub-text mt-8 mb-16">우대금리 충족 시 기준 · 핀다에서 바로 신청 가능해요</p>
+
+      <div id="applyBankList"></div>
+
+      <div class="info-box warning" style="margin-top:12px">
+        <span>⚠️</span>
+        <span>은행별 우대금리 조건은 6월 22일 출시 후 확정돼요. 현재는 최대 적용 기준이에요.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== State =====
+const state = {
+  age: null,
+  armyAdjusted: false,
+  army: false,
+  armyMonths: 0,
+  incomeIdx: -1,
+  jobType: -1,
+  newJob: null,
+  isEligible: false,
+  isPreferred: false, // 우대형 여부
+  hasAccount: false,
+  doyakMonths: 0,
+  doyakMonthly: 0,
+  doyakRate: 6,
+  currentScreen: 0,
+};
+
+const screenHistory = [];
+
+// ===== Navigation =====
+function goTo(n) {
+  const screens = ['screen-0','screen-1','screen-err','screen-2','screen-3','screen-4','screen-result-simple','screen-result-switch'];
+  const screenMap = {
+    0: 'screen-0',
+    1: 'screen-1',
+    'err': 'screen-err',
+    2: 'screen-2',
+    3: 'screen-3',
+    4: 'screen-4',
+    'result-simple': 'screen-result-simple',
+    'result-switch': 'screen-result-switch',
+  };
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById(screenMap[n] || `screen-${n}`);
+  if (target) target.classList.add('active');
+
+  screenHistory.push(state.currentScreen);
+  state.currentScreen = n;
+
+  updateHeader(n);
+  window.scrollTo(0,0);
+}
+
+function goBack() {
+  const prev = screenHistory.pop();
+  if (prev !== undefined) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const screenMap = {0:'screen-0',1:'screen-1','err':'screen-err',2:'screen-2',3:'screen-3',4:'screen-4','result-simple':'screen-result-simple','result-switch':'screen-result-switch'};
+    const target = document.getElementById(screenMap[prev] || `screen-${prev}`);
+    if (target) target.classList.add('active');
+    state.currentScreen = prev;
+    updateHeader(prev);
+    window.scrollTo(0,0);
+  }
+}
+
+function updateHeader(n) {
+  const progress = {0:0, 1:25, 2:50, 3:75, 4:75, 'mydata':15, 'result-simple':100, 'result-switch':100};
+  const titles = {0:'', 1:'자격 확인', 2:'유형 판별', 3:'도약계좌 확인', 4:'도약계좌 정보', 'mydata':'마이데이터 연동', 'result-simple':'계산 결과', 'result-switch':'갈아타기 비교'};
+
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  const backBtn = document.getElementById('backBtn');
+  const logo = document.getElementById('headerLogo');
+  const title = document.getElementById('headerTitle');
+
+  if (n === 0) {
+    bar.style.display = 'none';
+    backBtn.style.display = 'none';
+    logo.style.display = 'block';
+    title.style.display = 'none';
+  } else {
+    bar.style.display = 'block';
+    fill.style.width = (progress[n] || 0) + '%';
+    backBtn.style.display = 'flex';
+    logo.style.display = 'none';
+    title.style.display = 'block';
+    title.textContent = titles[n] || '';
+  }
+}
+
+// ===== Step 1 Logic =====
+function calcAge() {
+  const y = parseInt(document.getElementById('birthYear').value);
+  const m = parseInt(document.getElementById('birthMonth').value);
+  const d = parseInt(document.getElementById('birthDay').value);
+  const display = document.getElementById('ageDisplay');
+
+  if (!y || !m || !d || y < 1980 || y > 2010) { display.textContent = ''; state.age = null; checkStep1(); return; }
+
+  const today = new Date(2026, 4, 29); // 2026-05-29
+  let age = today.getFullYear() - y;
+  if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) age--;
+
+  state.age = age;
+  const armyBonus = state.army ? Math.min(parseInt(document.getElementById('armyMonths').value)||0, 60) : 0;
+  state.armyMonths = armyBonus;
+  const adjustedAge = age;
+  const maxAge = 34 + Math.floor(armyBonus / 12);
+
+  if (armyBonus > 0) {
+    display.textContent = `만 ${age}세 (군복무 보정 후 상한 만 ${maxAge}세)`;
+  } else {
+    display.textContent = `만 ${age}세`;
+  }
+
+  checkStep1();
+}
+
+function selectArmy(v) {
+  state.army = v;
+  document.getElementById('chip-army-y').className = 'chip' + (v ? ' selected' : '');
+  document.getElementById('chip-army-n').className = 'chip' + (!v ? ' selected' : '');
+  const sect = document.getElementById('armySection');
+  sect.className = 'expand-section ' + (v ? 'visible' : 'hidden');
+  calcAge();
+  checkStep1();
+}
+
+function selectIncome(i) {
+  state.incomeIdx = i;
+  document.querySelectorAll('#incomeGroup .radio-card').forEach((el, idx) => {
+    el.className = 'radio-card' + (idx === i ? ' selected' : '');
+  });
+  checkStep1();
+}
+
+function selectJob(i) {
+  state.jobType = i;
+  ['chip-job-0','chip-job-1','chip-job-2'].forEach((id, idx) => {
+    document.getElementById(id).className = 'chip' + (idx === i ? ' selected' : '');
+  });
+  const smeSect = document.getElementById('smeSect');
+  smeSect.className = 'expand-section ' + (i === 0 ? 'visible' : 'hidden');
+  checkStep1();
+}
+
+function selectNewJob(v) {
+  state.newJob = v;
+  document.querySelectorAll('#smeSect .radio-card').forEach((el, idx) => {
+    el.className = 'radio-card' + ((idx===0 && v) || (idx===1 && !v) ? ' selected' : '');
+  });
+  checkStep1();
+}
+
+function checkStep1() {
+  const btn = document.getElementById('step1Next');
+  const ready = state.age !== null && state.incomeIdx >= 0 && state.jobType >= 0 &&
+    (state.jobType !== 0 || state.newJob !== null) &&
+    (state.army === false || (state.army === true && state.armyMonths >= 0));
+  btn.disabled = !ready;
+}
+
+function checkEligibility() {
+  const armyBonus = state.army ? state.armyMonths : 0;
+  const maxAge = 34 + Math.floor(armyBonus / 12);
+
+  // 나이 초과 판단
+  if (state.age > maxAge) {
+    document.getElementById('errReason').textContent = `만 ${state.age}세는 청년미래적금 가입 나이(만 ${maxAge}세)를 초과해요.`;
+    document.getElementById('errAge').textContent = `만 ${state.age}세 (상한 만 ${maxAge}세)`;
+    document.getElementById('errAge').style.color = 'var(--negative)';
+    document.getElementById('errIncome').textContent = '나이 조건 미충족으로 확인 불가';
+    document.getElementById('errIncome').style.color = 'var(--sub)';
+    goTo('err');
+    return;
+  }
+
+  // 소득 초과
+  if (state.incomeIdx === 3) {
+    document.getElementById('errReason').textContent = '연 소득 7,500만원 초과 시 가입 자격이 없어요.';
+    document.getElementById('errAge').textContent = `만 ${state.age}세 ✅`;
+    document.getElementById('errAge').style.color = 'var(--positive)';
+    document.getElementById('errIncome').textContent = '7,500만원 초과 ❌';
+    document.getElementById('errIncome').style.color = 'var(--negative)';
+    goTo('err');
+    return;
+  }
+
+  // 우대형 판별
+  const incomeLabels = ['2,400만원 이하','2,400~3,600만원','3,600~7,500만원','7,500만원 초과'];
+  const jobLabels = ['중소기업 재직','소상공인','일반/기타'];
+
+  // 우대형 조건: 소득 0,1 + 중소기업 또는 소상공인 or 2025년 이후 신규취업
+  const isLowIncome = state.incomeIdx <= 1;
+  const isSME = state.jobType === 0 || state.jobType === 1;
+  const isNewJobOverride = state.jobType === 0 && state.newJob === true;
+
+  state.isPreferred = isLowIncome && isSME || isNewJobOverride;
+  state.isEligible = true;
+
+  // 유형 결과 카드 업데이트
+  const rate = state.isPreferred ? '12%' : '6%';
+  const typeName = state.isPreferred ? '우대형' : '일반형';
+  document.getElementById('typeRate').textContent = rate;
+  document.getElementById('typeDesc').textContent = `납입액의 ${rate} 정부가 매칭 지원`;
+  document.getElementById('typeBadge1').textContent = typeName;
+
+  if (!state.isPreferred) {
+    document.getElementById('typeCard').style.background = 'linear-gradient(135deg, #374151, #6B7280)';
+    document.getElementById('generalWarning').style.display = 'flex';
+  }
+
+  document.getElementById('confirmAge').textContent = `만 ${state.age}세 ✅`;
+  document.getElementById('confirmIncome').textContent = incomeLabels[state.incomeIdx] + ' ✅';
+  document.getElementById('confirmJob').textContent = jobLabels[state.jobType] + ' ✅';
+
+  goTo(2);
+}
+
+// ===== Step 2B =====
+function selectHasAccount(v) {
+  state.hasAccount = v;
+  document.getElementById('select-has-acc').className = 'select-card' + (v ? ' selected' : '');
+  document.getElementById('select-no-acc').className = 'select-card' + (!v ? ' selected' : '');
+  setTimeout(() => {
+    if (v) goTo(4);
+    else goToResult(false);
+  }, 200);
+}
+
+function selectDoyakRate(i) {
+  document.querySelectorAll('[id^="doyakRate-"]').forEach((el,idx) => {
+    el.className = 'radio-card' + (idx===i?' selected':'');
+  });
+  const sect = document.getElementById('rateCustomSect');
+  sect.className = 'expand-section ' + (i===1?'visible':'hidden');
+  updateStep5Btn();
+}
+
+function updateStep5Btn() {
+  const months = parseInt(document.getElementById('doyakMonths').value)||0;
+  const monthly = parseInt(document.getElementById('doyakMonthly').value)||0;
+  document.getElementById('step5Next').disabled = !(months >= 1 && months <= 59 && monthly >= 1 && monthly <= 70);
+}
+
+// ===== 계산 로직 =====
+function calcMiraeSavings(monthlyWan, isPreferred, rate) {
+  // monthlyWan: 만원 단위
+  const monthly = Math.min(monthlyWan, 50);
+  const months = 36;
+  const principal = monthly * months;
+
+  // 단리 근사 (자유적립식)
+  const interest = principal * (rate / 100) * ((months + 1) / 2) / 12;
+
+  const contribRate = isPreferred ? 0.12 : 0.06;
+  const contrib = monthly * months * contribRate;
+
+  const total = principal + interest + contrib;
+  return { principal, interest, contrib, total };
+}
+
+function calcDoyakRemain(paidMonths, monthlyWan, doyakRate, isPreferred) {
+  const totalMonths = 60;
+  const remMonths = totalMonths - paidMonths;
+  const oldPrincipal = paidMonths * monthlyWan;
+  const remPrincipal = remMonths * monthlyWan;
+  const totalPrincipal = totalMonths * monthlyWan;
+
+  // 도약계좌 기여금 비율 (소득구간에 따라 다름, 여기선 3~6% 사용)
+  const doyakContribRate = isPreferred ? 0.06 : 0.03;
+  const totalContrib = totalPrincipal * doyakContribRate;
+
+  const totalInterest = totalPrincipal * (doyakRate / 100) * ((totalMonths + 1) / 2) / 12;
+  const total = totalPrincipal + totalContrib + totalInterest;
+
+  // 특별해지: 기존 납입분 원금 + 기여금 전액 보전 + 이자
+  const oldContrib = oldPrincipal * doyakContribRate;
+  const oldInterest = oldPrincipal * (doyakRate / 100) * (paidMonths / 12) * 0.6;
+  const switchReceipt = oldPrincipal + oldContrib + oldInterest;
+
+  return { total, switchReceipt, oldPrincipal, oldContrib, oldInterest, remPrincipal, totalContrib, totalInterest };
+}
+
+function goToResult(hasSwitch) {
+  if (hasSwitch) {
+    state.doyakMonths = parseInt(document.getElementById('doyakMonths').value)||0;
+    state.doyakMonthly = parseInt(document.getElementById('doyakMonthly').value)||0;
+    const rateCustom = document.querySelector('[id^="doyakRate-"].selected')?.id === 'doyakRate-1';
+    state.doyakRate = rateCustom ? (parseFloat(document.getElementById('doyakCustomRate').value)||6) : 6;
+  }
+
+  renderSimpleResult();
+
+  if (hasSwitch) {
+    renderSwitchResult();
+    goTo('result-switch');
+  } else {
+    goTo('result-simple');
+  }
+}
+
+function renderSimpleResult() {
+  const monthly = 50;
+  const rate5 = calcMiraeSavings(monthly, state.isPreferred, 5);
+  const rate8 = calcMiraeSavings(monthly, state.isPreferred, 8);
+
+  document.getElementById('simpleAmount').textContent = Math.round(rate8.total).toLocaleString();
+  document.getElementById('simpleTypeBadge').textContent = state.isPreferred ? '우대형 12%' : '일반형 6%';
+
+  updateSlider();
+  renderBankList();
+  renderApplyBankList();
+}
+
+function updateSlider() {
+  const v = parseInt(document.getElementById('monthlySlider').value);
+  document.getElementById('sliderVal').textContent = v + '만원';
+
+  const r5 = calcMiraeSavings(v, state.isPreferred, 5);
+  const r8 = calcMiraeSavings(v, state.isPreferred, 8);
+
+  document.getElementById('breakdown-principal').textContent = Math.round(r5.principal).toLocaleString() + '만원';
+  document.getElementById('breakdown-interest').textContent = '+' + Math.round(r5.interest).toLocaleString() + '만원';
+  document.getElementById('breakdown-contrib').textContent = '+' + Math.round(r5.contrib).toLocaleString() + '만원';
+  document.getElementById('breakdown-total').textContent = Math.round(r5.total).toLocaleString() + '만원';
+
+  const bonus = Math.round(r8.total - r5.total);
+  document.getElementById('urateBonus').innerHTML = `우대금리 모두 충족 시 <b>+${bonus.toLocaleString()}만원</b> 추가`;
+
+  document.getElementById('simpleAmount').textContent = Math.round(r8.total).toLocaleString();
+  document.getElementById('simpleAmountSub').textContent = `월 ${v}만원 × 36개월 · 우대금리 최대 적용 기준`;
+}
+
+const banks = [
+  { name: '국민은행', icon: '🏛', maxRate: 8, color: '#FFD700' },
+  { name: '신한은행', icon: '🔵', maxRate: 8, color: '#0046FF' },
+  { name: '하나은행', icon: '🟢', maxRate: 8, color: '#009900' },
+  { name: '농협은행', icon: '🌾', maxRate: 8, color: '#2E8B57' },
+  { name: '기업은행', icon: '🏢', maxRate: 8, color: '#004EA2' },
+  { name: '우정사업본부', icon: '📮', maxRate: 8, color: '#ED1C24' },
+  { name: '카카오뱅크', icon: '💛', maxRate: 7, color: '#3A1D1D' },
+  { name: '수협은행', icon: '🐟', maxRate: 7, color: '#00509D' },
+  { name: '부산은행', icon: '🌊', maxRate: 7, color: '#003087' },
+];
+
+function renderBankList() {
+  const container = document.getElementById('bankList');
+  const v = parseInt(document.getElementById('monthlySlider').value) || 50;
+  container.innerHTML = '';
+  banks.forEach((bank, i) => {
+    const r = calcMiraeSavings(v, state.isPreferred, bank.maxRate);
+    const row = document.createElement('div');
+    row.className = 'bank-row';
+    row.innerHTML = `
+      <div class="bank-icon" style="background:${bank.color}20">${bank.icon}</div>
+      <div style="flex:1">
+        <div class="bank-name">${bank.name}</div>
+        <div class="bank-rate">최대 ${bank.maxRate}% · 기본 5%</div>
+      </div>
+      <div style="text-align:right">
+        <div class="bank-amount">${Math.round(r.total).toLocaleString()}만원</div>
+        ${i===0 ? '<div style="font-size:11px;color:var(--positive);font-weight:600">최고 수령</div>' : ''}
+      </div>
+      <div class="bank-chevron">›</div>
+    `;
+    row.onclick = () => openSheet('applySheet');
+    container.appendChild(row);
+  });
+}
+
+function renderApplyBankList() {
+  const container = document.getElementById('applyBankList');
+  container.innerHTML = '';
+  banks.slice(0, 6).forEach((bank, i) => {
+    const r = calcMiraeSavings(50, state.isPreferred, bank.maxRate);
+    const row = document.createElement('div');
+    row.className = 'bank-row';
+    row.style.cursor = 'pointer';
+    row.innerHTML = `
+      <div class="bank-icon" style="background:${bank.color}20">${bank.icon}</div>
+      <div style="flex:1">
+        <div class="bank-name">${bank.name}</div>
+        <div class="bank-rate">최대 ${bank.maxRate}%</div>
+      </div>
+      <div class="bank-amount">${Math.round(r.total).toLocaleString()}만원</div>
+      <div style="background:var(--primary);color:white;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600">신청</div>
+    `;
+    row.onclick = () => alert(`${bank.name} 청년미래적금 신청 페이지로 이동합니다.\n(실제 서비스에서는 핀다 파트너 은행 랜딩으로 연결됩니다)`);
+    container.appendChild(row);
+  });
+}
+
+function renderSwitchResult() {
+  const dMonths = state.doyakMonths;
+  const dMonthly = state.doyakMonthly;
+  const dRate = state.doyakRate;
+
+  const doyak = calcDoyakRemain(dMonths, dMonthly, dRate, state.isPreferred);
+  const mirae = calcMiraeSavings(50, state.isPreferred, 8);
+
+  const switchTotal = Math.round(doyak.switchReceipt + mirae.total);
+  const keepTotal = Math.round(doyak.total);
+  const diff = switchTotal - keepTotal;
+
+  // 판정
+  const verdictCard = document.getElementById('verdictCard');
+  const verdictIcon = document.getElementById('verdictIcon');
+  const verdictTitle = document.getElementById('verdictTitle');
+  const verdictDesc = document.getElementById('verdictDesc');
+
+  if (diff > 50) {
+    verdictCard.className = 'verdict-card good';
+    verdictIcon.textContent = '🎉';
+    verdictTitle.textContent = '갈아타기가 유리해요';
+    verdictDesc.textContent = `유지보다 약 ${Math.abs(diff).toLocaleString()}만원 더 받을 수 있어요`;
+  } else if (diff < -50) {
+    verdictCard.className = 'verdict-card bad';
+    verdictIcon.textContent = '🤔';
+    verdictTitle.textContent = '유지가 더 유리해요';
+    verdictDesc.textContent = `갈아타기 시 약 ${Math.abs(diff).toLocaleString()}만원 손실이 예상돼요`;
+    document.getElementById('switchCTA').textContent = '수령액 결과만 보기';
+    document.getElementById('switchCTA').className = 'btn btn-outline';
+    document.getElementById('keepCTA').textContent = '✅ 도약계좌 유지하기';
+  } else {
+    verdictCard.className = 'verdict-card neutral';
+    verdictIcon.textContent = '⚖️';
+    verdictTitle.textContent = '비슷해요';
+    verdictDesc.textContent = `차이가 ${Math.abs(diff).toLocaleString()}만원으로 비슷해요. 기간을 고려해보세요`;
+  }
+
+  // 비교 바
+  const maxVal = Math.max(switchTotal, keepTotal);
+  document.getElementById('switchTotalLabel').textContent = switchTotal.toLocaleString() + '만원';
+  document.getElementById('keepTotalLabel').textContent = keepTotal.toLocaleString() + '만원';
+  document.getElementById('switchBar').style.width = (switchTotal / maxVal * 100) + '%';
+  document.getElementById('keepBar').style.width = (keepTotal / maxVal * 100) + '%';
+
+  // 갈아타기 탭
+  document.getElementById('sw-principal').textContent = Math.round(doyak.oldPrincipal).toLocaleString() + '만원';
+  document.getElementById('sw-contrib').textContent = '+' + Math.round(doyak.oldContrib).toLocaleString() + '만원';
+  document.getElementById('sw-interest').textContent = '+' + Math.round(doyak.oldInterest).toLocaleString() + '만원';
+  document.getElementById('sw-subtotal1').textContent = Math.round(doyak.switchReceipt).toLocaleString() + '만원';
+  document.getElementById('sw-new-principal').textContent = Math.round(mirae.principal).toLocaleString() + '만원';
+  document.getElementById('sw-new-contrib').textContent = '+' + Math.round(mirae.contrib).toLocaleString() + '만원';
+  document.getElementById('sw-new-interest').textContent = '+' + Math.round(mirae.interest).toLocaleString() + '만원';
+  document.getElementById('sw-subtotal2').textContent = Math.round(mirae.total).toLocaleString() + '만원';
+  document.getElementById('sw-total').textContent = switchTotal.toLocaleString() + '만원';
+
+  // 유지 탭
+  document.getElementById('kp-old-principal').textContent = Math.round(doyak.oldPrincipal).toLocaleString() + '만원';
+  document.getElementById('kp-rem-principal').textContent = Math.round(doyak.remPrincipal).toLocaleString() + '만원';
+  document.getElementById('kp-contrib').textContent = '+' + Math.round(doyak.totalContrib).toLocaleString() + '만원';
+  document.getElementById('kp-interest').textContent = '+' + Math.round(doyak.totalInterest).toLocaleString() + '만원';
+  document.getElementById('kp-total').textContent = keepTotal.toLocaleString() + '만원';
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-switch').className = 'tab-btn' + (tab==='switch'?' active':'');
+  document.getElementById('tab-keep').className = 'tab-btn' + (tab==='keep'?' active':'');
+  document.getElementById('tab-content-switch').style.display = tab==='switch'?'block':'none';
+  document.getElementById('tab-content-keep').style.display = tab==='keep'?'block':'none';
+}
+
+// ===== Sheets =====
+function openSheet(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeSheet(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ===== 앱 설치 유도 =====
+const APP_STORE_URL   = 'https://apps.apple.com/kr/app/id1494383245';
+const PLAY_STORE_URL  = 'https://play.google.com/store/apps/details?id=com.finda.android';
+
+function getOS() {
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
+  if (/Android/.test(ua)) return 'aos';
+  return 'other'; // PC
+}
+
+function goToStore() {
+  const os = getOS();
+  if (os === 'ios')      window.location.href = APP_STORE_URL;
+  else if (os === 'aos') window.location.href = PLAY_STORE_URL;
+  else                   window.open(APP_STORE_URL, '_blank'); // PC는 앱스토어 기본
+  triggerNotifySuccess();
+}
+
+// OS에 따라 버튼 아이콘/텍스트 초기화
+(function initStoreBtn() {
+  const os = getOS();
+  const icon = document.getElementById('storeIcon');
+  const text = document.getElementById('storeBtnText');
+  if (!icon || !text) return;
+  if (os === 'ios')      { icon.textContent = '🍎'; text.textContent = 'App Store에서 받기'; }
+  else if (os === 'aos') { icon.textContent = '▶'; text.textContent = 'Google Play에서 받기'; }
+  else                   { icon.textContent = '📲'; text.textContent = '핀다 앱 설치하기'; }
+})();
+
+function showAppInstallSheet() {
+  openSheet('appInstallSheet');
+}
+
+function triggerNotifySuccess() {
+  document.getElementById('appInstallContent').innerHTML = `
+    <div class="notify-done-state">
+      <div class="notify-done-icon">🎉</div>
+      <div class="notify-done-title">앱 설치 완료!</div>
+      <div class="notify-done-desc">핀다 앱에서 마이데이터를 연결하면<br>1분 만에 내 결과를 확인할 수 있어요<br><br>6월 22일 출시 알림도 자동으로 받아요 🔔</div>
+      <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="closeSheet('appInstallSheet')">확인</button>
+    </div>
+  `;
+}
+
+// ===== MyData 시뮬레이션 =====
+function simulateMydata() {
+  // 웹에서는 앱 설치로 유도 (마이데이터는 앱 전용)
+  openSheet('appInstallSheet');
+  return;
+  // 마이데이터 로딩 화면으로 이동
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-mydata').classList.add('active');
+  screenHistory.push(0);
+  state.currentScreen = 'mydata';
+  updateHeader('mydata');
+
+  const steps = [
+    { id: 'lstep1', text: '✅ 소득 정보 확인 완료', delay: 800 },
+    { id: 'lstep2', text: '✅ 재직 정보 확인 완료', delay: 1600 },
+    { id: 'lstep3', text: '✅ 도약계좌 확인 완료', delay: 2400 },
+  ];
+
+  // 단계별 애니메이션
+  document.getElementById('lstep1').className = 'loading-step active';
+  document.getElementById('lstep2').style.opacity = '0.3';
+  document.getElementById('lstep3').style.opacity = '0.3';
+
+  steps.forEach((step, i) => {
+    setTimeout(() => {
+      document.getElementById(step.id).className = 'loading-step done';
+      document.getElementById(step.id).textContent = step.text;
+      if (steps[i+1]) {
+        document.getElementById(steps[i+1].id).className = 'loading-step active';
+      }
+    }, step.delay);
+  });
+
+  // 완료 후 → 결과 자동 세팅 및 Step 2로 이동
+  setTimeout(() => {
+    document.getElementById('mydataLoadingText').textContent = '연동 완료!';
+
+    // 마이데이터로 가져온 데이터 세팅 (시뮬레이션)
+    state.age = 28;
+    state.army = false;
+    state.armyMonths = 0;
+    state.incomeIdx = 0; // 2,400만원 이하
+    state.jobType = 0;   // 중소기업
+    state.newJob = true; // 2025년 이후 신규취업
+    state.isEligible = true;
+    state.isPreferred = true;
+
+    setTimeout(() => {
+      showMydataConfirm();
+    }, 600);
+  }, 3200);
+}
+
+function showMydataConfirm() {
+  // 로딩 화면 내용을 확인 화면으로 교체
+  const screen = document.getElementById('screen-mydata');
+  screen.innerHTML = `
+    <div style="padding: 24px 20px 120px">
+      <div class="section-label">마이데이터 연동 완료</div>
+      <h2>불러온 정보를<br>확인해주세요</h2>
+      <p class="sub-text mt-8 mb-16" style="margin-bottom:16px">다르면 직접 수정할 수 있어요</p>
+
+      <div class="mydata-result-preview">
+        <div style="font-size:12px; font-weight:700; color:var(--positive); margin-bottom:8px">✅ 자동으로 불러온 정보</div>
+        <div class="mydata-result-row">
+          <span class="mydata-result-label">나이</span>
+          <span class="mydata-result-value">만 28세</span>
+        </div>
+        <div class="mydata-result-row">
+          <span class="mydata-result-label">연 소득</span>
+          <span class="mydata-result-value">약 2,400만원 이하</span>
+        </div>
+        <div class="mydata-result-row">
+          <span class="mydata-result-label">재직</span>
+          <span class="mydata-result-value">중소기업 재직 (2025년 입사)</span>
+        </div>
+        <div class="mydata-result-row">
+          <span class="mydata-result-label">청년도약계좌</span>
+          <span class="mydata-result-value" style="color:var(--positive)">보유 중 · 24개월 납입</span>
+        </div>
+      </div>
+
+      <div class="info-box positive">
+        <span>🎉</span>
+        <div><b>우대형 12%</b> 기여금 대상이에요!<br><span style="font-size:12px">갈아타기 손익도 바로 계산해드릴게요</span></div>
+      </div>
+
+      <div class="sticky-bottom">
+        <button class="btn btn-primary" onclick="applyMydataAndGo()">이 정보로 계산하기 →</button>
+        <div style="text-align:center; margin-top:10px">
+          <button class="btn-ghost" onclick="goTo(1)">직접 수정할게요</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function applyMydataAndGo() {
+  // 마이데이터로 도약계좌 정보도 자동 세팅
+  state.hasAccount = true;
+  state.doyakMonths = 24;
+  state.doyakMonthly = 50;
+  state.doyakRate = 6;
+
+  // 유형 결과 카드 업데이트
+  document.getElementById('typeRate').textContent = '12%';
+  document.getElementById('typeDesc').textContent = '납입액의 12% 정부가 매칭 지원';
+  document.getElementById('typeBadge1').textContent = '우대형';
+  document.getElementById('confirmAge').textContent = '만 28세 ✅';
+  document.getElementById('confirmIncome').textContent = '2,400만원 이하 ✅';
+  document.getElementById('confirmJob').textContent = '중소기업 재직 ✅';
+
+  renderSimpleResult();
+  renderSwitchResult();
+  goTo('result-switch');
+}
+
+// ===== Init =====
+updateHeader(0);
+
+// header title 매핑에 mydata 추가
+const _origUpdateHeader = updateHeader;
+
+</script>
+
+</body>
+</html>
