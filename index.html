@@ -880,10 +880,7 @@
     </div>
 
     <div class="sticky-bottom">
-      <button class="btn btn-primary" onclick="simulateMydata()">지금 바로 확인하기 →</button>
-      <div style="text-align:center; margin-top:10px">
-        <button class="btn-ghost" onclick="goTo(1)">직접 입력할게요</button>
-      </div>
+      <button class="btn btn-primary" onclick="goTo(1)">지금 바로 확인하기 →</button>
     </div>
   </div>
 
@@ -1423,12 +1420,14 @@
           </div>
         </div>
 
-        <button class="store-btn unified" onclick="goToStore()">
-          <span id="storeIcon">📲</span>
-          <span id="storeBtnText">핀다 앱 설치하기</span>
+        <button class="store-btn ios" onclick="window.open('https://apps.apple.com/kr/app/finda/id1494383245','_blank')">
+          <span>🍎</span> App Store에서 받기
         </button>
-        <div style="text-align:center; margin-top:4px">
-          <button class="btn-ghost" onclick="closeSheet('appInstallSheet')">나중에 직접 입력할게요</button>
+        <button class="store-btn aos" onclick="window.open('https://play.google.com/store/apps/details?id=kr.co.finda.finda&hl=ko','_blank')" style="margin-top:10px">
+          <span>▶</span> Google Play에서 받기
+        </button>
+        <div style="text-align:center; margin-top:12px">
+          <button class="btn-ghost" onclick="closeSheet('appInstallSheet')">앱 없이 계산만 해볼게요</button>
         </div>
       </div>
 
@@ -2014,9 +2013,6 @@ function triggerNotifySuccess() {
 
 // ===== MyData 시뮬레이션 =====
 function simulateMydata() {
-  // 웹에서는 앱 설치로 유도 (마이데이터는 앱 전용)
-  openSheet('appInstallSheet');
-  return;
   // 마이데이터 로딩 화면으로 이동
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-mydata').classList.add('active');
@@ -2131,6 +2127,11 @@ function applyMydataAndGo() {
 
 // ===== Init =====
 updateHeader(0);
+
+// 페이지 진입 시 앱 설치 팝업 자동 표시
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => openSheet('appInstallSheet'), 600);
+});
 
 // header title 매핑에 mydata 추가
 const _origUpdateHeader = updateHeader;
