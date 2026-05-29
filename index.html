@@ -629,6 +629,33 @@
     box-shadow: 0 2px 10px rgba(89,70,255,0.5);
   }
 
+  /* 마이데이터 유도 배너 (도약계좌 입력 화면) */
+  .mydata-promo-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--primary-light);
+    border: 1.5px solid var(--primary);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 12px;
+  }
+  .mydata-promo-banner:hover { background: #ddd9ff; transform: translateY(-1px); }
+  .mydata-promo-title { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 3px; }
+  .mydata-promo-desc { font-size: 12px; color: var(--sub); line-height: 1.5; }
+  .mydata-promo-cta {
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    background: var(--primary);
+    padding: 7px 12px;
+    border-radius: 99px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   /* 앱 피처 리스트 */
   .app-feature-list { display: flex; flex-direction: column; gap: 0; margin-bottom: 20px; }
   .app-feature-row {
@@ -1150,6 +1177,18 @@
     <div class="info-box info">
       <span>ℹ️</span>
       <span>갈아타기는 <b>2026년 6월</b> 최초 모집 기간에만 가능해요. 이 기간을 놓치면 동일 조건의 전환 기회가 없어요.</span>
+    </div>
+
+    <!-- 마이데이터 유도 배너 -->
+    <div class="mydata-promo-banner" onclick="showAppInstallSheet('mydata')">
+      <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0">
+        <span style="font-size:22px; flex-shrink:0">🔗</span>
+        <div>
+          <div class="mydata-promo-title">일일이 입력하기 귀찮다면?</div>
+          <div class="mydata-promo-desc">핀다 앱에서 마이데이터 연결하면<br>도약계좌 정보를 자동으로 불러와요</div>
+        </div>
+      </div>
+      <div class="mydata-promo-cta">앱에서 연결 →</div>
     </div>
 
     <div style="height:80px"></div>
@@ -1996,7 +2035,16 @@ function goToStore() {
   else                   { icon.textContent = '📲'; text.textContent = '핀다 앱 설치하기'; }
 })();
 
-function showAppInstallSheet() {
+function showAppInstallSheet(context) {
+  // context: 'mydata' 이면 제목/설명 변경
+  const content = document.getElementById('appInstallContent');
+  if (context === 'mydata') {
+    content.querySelector('h3').textContent = '마이데이터 연결하러 가기';
+    content.querySelector('p').innerHTML = '핀다 앱 설치 후 마이데이터를 연결하면<br>도약계좌 정보를 자동으로 불러와요 🔗';
+  } else {
+    content.querySelector('h3').textContent = '핀다 앱에서 더 편하게!';
+    content.querySelector('p').innerHTML = '마이데이터 연결은 앱에서만 가능해요<br>앱 설치 후 1분 만에 자격·수령액 확인해요';
+  }
   openSheet('appInstallSheet');
 }
 
